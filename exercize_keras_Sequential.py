@@ -20,7 +20,8 @@ import time
 ####################################
 ###### LOADING data ################
 #####################################
-DATADIR = "D:/PetImages"
+#DATADIR = "D:/PetImages"
+DATADIR = "F:/code/catsanddogs/PetImages"
 
 CATEGORIES = ["Dog", "Cat"]
 
@@ -115,33 +116,40 @@ pickle_out.close()
 #######################
 ##### Network with 2 cnn-layers-256, 1 Dense layer  
 #https://pythonprogramming.net/convolutional-neural-network-deep-learning-python-tensorflow-keras/
+if(np.amax(X, axis = None) > 1):
+    X = X/255.0
 
-#X = X/255.0
-#
-#model = Sequential()
-#
-#model.add(Conv2D(64, (3, 3), input_shape=X.shape[1:]))
-#model.add(Activation('relu'))
-#model.add(MaxPooling2D(pool_size=(2, 2)))
-#
-#model.add(Conv2D(64, (3, 3)))
-#model.add(Activation('relu'))
-#model.add(MaxPooling2D(pool_size=(2, 2)))
-#
-#model.add(Flatten())  # this converts our 3D feature maps to 1D feature vectors
-#
-#model.add(Dense(64))
-#model.add(Activation('relu'))
-#
-#model.add(Dense(1))
-#model.add(Activation('sigmoid'))
-#
-#tensorboard = TensorBoard(log_dir="D:/Code/logs/{}".format(NAME))
-#
-#
-#model.compile(loss='binary_crossentropy',
-#              optimizer='adam',
-#              metrics=['accuracy'])
+model = Sequential()
+
+model.add(Conv2D(64, (3, 3), input_shape=X.shape[1:]))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+
+model.add(Conv2D(64, (3, 3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+
+model.add(Flatten())  # this converts our 3D feature maps to 1D feature vectors
+
+model.add(Dense(64))
+model.add(Activation('relu'))
+
+model.add(Dense(1))
+model.add(Activation('sigmoid'))
+
+tensorboard = TensorBoard(log_dir="F:/code/logs/{}".format(NAME))
+
+
+model.compile(loss='binary_crossentropy',
+              optimizer='adam',
+              metrics=['accuracy'])
+
+model.fit(X, y,
+                      batch_size=32,
+                      epochs=10,
+                      validation_split=0.3,
+                      callbacks=[tensorboard])
+
 
 #https://pythonprogramming.net/tensorboard-analysis-deep-learning-python-tensorflow-keras/?completed=/convolutional-neural-network-deep-learning-python-tensorflow-keras/
 
@@ -201,9 +209,9 @@ for dense_layer in dense_layers:
                       validation_split=0.3,
                       callbacks=[tensorboard])
             
-model.save('64x3-CNN-10epochs.model')
+model.save('64x2-CNN-10epochs.model')
 
-TESTDIR = "D:/PetImagesTest/"
+TESTDIR = "F:/code/catsanddogs/TestImages/"
 #test_data_array = []
 ##test_data_labels = []
 #
@@ -246,31 +254,25 @@ TESTDIR = "D:/PetImagesTest/"
 model = tf.keras.models.load_model("64x3-CNN.model")
 prediction_list = []
 
-
+num_rightp = 0
+counter = 0
 for category in CATEGORIES:  # do dogs and cats
     path = os.path.join(TESTDIR,category)  # create path to dogs and cats
     class_num = CATEGORIES.index(category)  # get the classification  (0 or a 1). 0=dog 1=cat
     for img in tqdm(os.listdir(path)):  # iterate over each image per dogs and cats
+        counter += 1
         img_array = cv2.imread(os.path.join(path,img) ,cv2.IMREAD_GRAYSCALE)  # convert to array
         new_array = cv2.resize(img_array, (IMG_SIZE, IMG_SIZE))  # resize to normalize data size
         Xt = np.array(new_array).reshape(-1, IMG_SIZE, IMG_SIZE, 1)
+        Xt = Xt/255.0
         prediction = model.predict(Xt)
         prediction_class = CATEGORIES[int(round(prediction[0][0]))]
-        print("predicitton is "+ str(prediction_class)+ " class is "+ CATEGORIES[class_num])    
+        print("predicitton is "+ str(prediction_class)+ " class is "+ CATEGORIES[class_num])   
+        if (str(prediction_class) == CATEGORIES[class_num]):
+            num_rightp += 1
+print("the accuracy is "+str(num_rightp/counter))
         
 
 
 
 
-counter = 0
-num_rightp = 0
-for img in X_test:
-    print()
-    prediction = model.predict([prepare(img)])  # REMEMBER YOU'RE PASSING A LIST OF THINGS YOU WISH TO PRED
-    print("predicitton is "+ str(prediction))    
-    prediction_list.append(CATEGORIES[int(round(prediction[0][0]))])
-    counter = counter + 1
-    if (CATEGORIES[int(prediction[0][0])] == Y_test[counter]):
-        num_rightp = num_rightp + 1
-        
-print("accuracy is "+ (num_rightp / X_test.size()))
