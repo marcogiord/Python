@@ -21,7 +21,7 @@ from keras.callbacks import TensorBoard
 ###### LOADING data ################
 #####################################
 DATADIR = "F:/code/catsanddogs/PetImages"
-
+#hkjfgjhgfh
 CATEGORIES = ["Dog", "Cat"]
 
 NAME = "Cats-vs-dogs-CNN"
